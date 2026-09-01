@@ -1,4 +1,4 @@
-import { CalendarDays, LayoutList, Sun } from 'lucide-react'
+import { CalendarRange, ListChecks, Sun } from 'lucide-react'
 import type { Page } from '../types'
 
 interface BottomNavProps {
@@ -8,14 +8,24 @@ interface BottomNavProps {
 
 const NAV_ITEMS: { id: Page; label: string; icon: typeof Sun }[] = [
   { id: 'today', label: 'Today', icon: Sun },
-  { id: 'week', label: 'Week', icon: CalendarDays },
-  { id: 'habits', label: 'Habits', icon: LayoutList },
+  { id: 'week', label: 'Week', icon: CalendarRange },
+  { id: 'habits', label: 'Habits', icon: ListChecks },
 ]
 
 export function BottomNav({ current, onChange }: BottomNavProps) {
+  const activeIndex = NAV_ITEMS.findIndex((item) => item.id === current)
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
-      <div className="glass-card mx-auto flex max-w-lg items-center rounded-2xl border border-white/60 p-1.5 shadow-[0_4px_24px_rgba(45,42,38,0.1)]">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+      <div className="glass pointer-events-auto relative mx-auto flex max-w-lg gap-1 rounded-full border border-line p-1.5 shadow-lift">
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1.5 rounded-full bg-accent shadow-glow transition-[left] duration-[400ms] ease-spring"
+          style={{
+            width: `calc((100% - 0.75rem) / ${NAV_ITEMS.length})`,
+            left: `calc(0.375rem + ${activeIndex} * (100% - 0.75rem) / ${NAV_ITEMS.length})`,
+          }}
+        />
         {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
           const active = current === id
           return (
@@ -23,18 +33,13 @@ export function BottomNav({ current, onChange }: BottomNavProps) {
               key={id}
               type="button"
               onClick={() => onChange(id)}
-              className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-xl py-2.5 transition-all duration-200 ${
-                active ? 'text-white' : 'text-warm-gray-light active:scale-95'
+              aria-current={active ? 'page' : undefined}
+              className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-[13px] font-semibold transition-colors duration-300 ${
+                active ? 'text-canvas' : 'text-muted hover:text-ink'
               }`}
             >
-              {active && (
-                <span className="absolute inset-0 rounded-xl bg-sage shadow-[0_2px_8px_rgba(90,138,122,0.35)]" />
-              )}
-              <Icon
-                className="relative h-5 w-5"
-                strokeWidth={active ? 2.5 : 2}
-              />
-              <span className="relative text-[11px] font-semibold">{label}</span>
+              <Icon className="size-4.5" strokeWidth={active ? 2.4 : 2} />
+              {label}
             </button>
           )
         })}

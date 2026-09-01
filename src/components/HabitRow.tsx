@@ -9,28 +9,23 @@ interface HabitRowProps {
   onToggle: () => void
   weekDates: Date[]
   completions: Completion[]
-  showWeeklyBadge?: boolean
   index?: number
 }
 
-function WeeklyDots({
-  count,
-  target,
-}: {
-  count: number
-  target: number
-}) {
+function WeeklyMeter({ count, target }: { count: number; target: number }) {
   return (
-    <div className="mt-2 flex items-center gap-1.5">
-      {Array.from({ length: target }, (_, i) => (
-        <span
-          key={i}
-          className={`h-2 flex-1 max-w-5 rounded-full transition-colors duration-300 ${
-            i < count ? 'bg-sage' : 'bg-cream-dark'
-          }`}
-        />
-      ))}
-      <span className="ml-1 text-xs font-semibold tabular-nums text-sage">
+    <div className="mt-2.5 flex items-center gap-2">
+      <div className="flex flex-1 gap-1">
+        {Array.from({ length: target }, (_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
+              i < count ? 'bg-accent' : 'bg-line-strong'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-[11px] font-semibold tabular-nums text-accent-ink">
         {count}/{target}
       </span>
     </div>
@@ -43,18 +38,16 @@ export function HabitRow({
   onToggle,
   weekDates,
   completions,
-  showWeeklyBadge = true,
   index = 0,
 }: HabitRowProps) {
-  const weeklyCount =
-    habit.type === 'weekly_target'
-      ? getWeeklyCompletionCount(habit, completions, weekDates)
-      : 0
-  const weeklyTarget = habit.weeklyTarget ?? 1
+  const isWeekly = habit.type === 'weekly_target'
+  const weeklyCount = isWeekly
+    ? getWeeklyCompletionCount(habit, completions, weekDates)
+    : 0
 
   const handleToggle = () => {
-    if (!completed) hapticSuccess()
-    else hapticLight()
+    if (completed) hapticLight()
+    else hapticSuccess()
     onToggle()
   }
 
@@ -62,51 +55,62 @@ export function HabitRow({
     <button
       type="button"
       onClick={handleToggle}
-      style={{ animationDelay: `${index * 60}ms` }}
-      className={`animate-fade-up group flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all duration-200 active:scale-[0.98] ${
+      aria-pressed={completed}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className={`animate-rise group flex w-full items-center gap-3.5 rounded-4xl border px-4 py-3.5 text-left transition-all duration-300 ease-spring active:scale-[0.985] ${
         completed
-          ? 'border-sage/25 bg-sage/8 shadow-none'
-          : 'border-white/80 bg-white shadow-[0_2px_12px_rgba(45,42,38,0.06)] hover:shadow-[0_4px_16px_rgba(45,42,38,0.08)]'
+          ? 'border-transparent bg-accent-wash'
+          : 'border-line bg-surface shadow-soft hover:-translate-y-0.5 hover:shadow-lift'
       }`}
     >
       <span
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl transition-all ${
+        className={`grid size-11 shrink-0 place-items-center rounded-2xl text-[1.35rem] transition-transform duration-300 ${
           completed
-            ? 'bg-sage/15 opacity-70'
-            : 'bg-sage-muted group-active:scale-95'
+            ? 'bg-accent/15 opacity-60'
+            : 'bg-accent-wash group-active:scale-95'
         }`}
       >
         {habit.emoji ?? '✓'}
       </span>
 
-      <div className="min-w-0 flex-1">
-        <p
-          className={`text-[1.05rem] font-semibold leading-snug transition-colors ${
-            completed ? 'text-warm-gray' : 'text-stone-800'
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block truncate text-[16px] font-semibold tracking-[-0.015em] transition-colors ${
+            completed ? 'text-muted' : 'text-ink'
           }`}
         >
           {habit.name}
-        </p>
-        {habit.timeLabel && !completed && (
-          <p className="mt-0.5 text-sm text-warm-gray-light">{habit.timeLabel}</p>
+        </span>
+
+        {completed ? (
+          <span className="mt-0.5 block text-[13px] font-medium text-accent-ink">
+            Done today
+          </span>
+        ) : (
+          habit.timeLabel && (
+            <span className="mt-0.5 block text-[13px] text-faint">
+              {habit.timeLabel}
+            </span>
+          )
         )}
-        {showWeeklyBadge && habit.type === 'weekly_target' && (
-          <WeeklyDots count={weeklyCount} target={weeklyTarget} />
+
+        {isWeekly && !completed && (
+          <WeeklyMeter count={weeklyCount} target={habit.weeklyTarget ?? 1} />
         )}
-        {completed && (
-          <p className="mt-0.5 text-sm font-medium text-sage">Done</p>
-        )}
-      </div>
+      </span>
 
       <span
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+        className={`grid size-11 shrink-0 place-items-center rounded-full border-2 transition-all duration-300 ${
           completed
-            ? 'border-sage bg-sage shadow-[0_2px_8px_rgba(90,138,122,0.35)] animate-check-pop'
-            : 'border-cream-dark bg-cream group-hover:border-sage/40'
+            ? 'animate-check-pop border-transparent bg-accent shadow-glow'
+            : 'border-line-strong bg-canvas group-hover:border-accent/50'
         }`}
       >
         {completed && (
-          <Check className="h-5 w-5 text-white animate-check-draw" strokeWidth={3} />
+          <Check
+            className="animate-check-draw size-5 text-canvas"
+            strokeWidth={3}
+          />
         )}
       </span>
     </button>

@@ -1,291 +1,331 @@
 import { useState } from 'react'
-import { Minus, Plus, Trash2, X } from 'lucide-react'
+import { ChevronRight, Minus, Plus, Trash2 } from 'lucide-react'
 import type { Habit, HabitType } from '../types'
-import { DAY_LABELS } from '../lib/weekUtils'
+import { DAY_LABELS, WEEK_DAY_ORDER, describeSchedule } from '../lib/weekUtils'
+import { Sheet } from './Sheet'
 
-const EMOJI_OPTIONS = ['☀️', '🏋️', '🧘', '📖', '💧', '🚶', '🍎', '🛏️', '✍️', '🎵', '💊', '🧹']
+const EMOJI_OPTIONS = [
+  '☀️', '🏋️', '🧘', '📖', '💧', '🚶', '🍎', '🛏️',
+  '✍️', '🎵', '💊', '🧹', '🏃', '🚴', '🥗', '☕',
+  '🧴', '📱', '🌱', '🎯', '🧠', '💬', '🪥', '✅',
+]
+
+const TYPE_OPTIONS: { id: HabitType; label: string; description: string }[] = [
+  { id: 'daily', label: 'Every day', description: 'Shows up on all seven days' },
+  { id: 'scheduled', label: 'Certain days', description: 'You choose which days' },
+  {
+    id: 'weekly_target',
+    label: 'Weekly target',
+    description: 'Any days — just hit the count',
+  },
+]
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <span className="mb-2.5 block text-[11px] font-bold uppercase tracking-[0.16em] text-faint">
+      {children}
+    </span>
+  )
+}
+
+const inputClass =
+  'w-full rounded-2xl border border-line bg-canvas px-4 py-3.5 text-[16px] text-ink outline-none transition placeholder:text-faint focus:border-accent focus:bg-surface'
 
 interface HabitFormProps {
   habit?: Habit
   onSave: (data: Omit<Habit, 'id'>) => void
   onCancel: () => void
+  onDelete?: () => void
 }
 
-const TYPE_OPTIONS: {
-  id: HabitType
-  label: string
-  description: string
-}[] = [
-  { id: 'daily', label: 'Every day', description: 'Same habit, every day' },
-  { id: 'scheduled', label: 'Specific days', description: 'Pick which days' },
-  { id: 'weekly_target', label: 'Weekly target', description: 'Any days, set a count' },
-]
-
-export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
+export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps) {
   const [name, setName] = useState(habit?.name ?? '')
   const [type, setType] = useState<HabitType>(habit?.type ?? 'daily')
-  const [emoji, setEmoji] = useState(habit?.emoji ?? '✓')
+  const [emoji, setEmoji] = useState(habit?.emoji ?? '✅')
   const [timeLabel, setTimeLabel] = useState(habit?.timeLabel ?? '')
   const [scheduledDays, setScheduledDays] = useState<number[]>(
     habit?.scheduledDays ?? [1, 3, 5],
   )
   const [weeklyTarget, setWeeklyTarget] = useState(habit?.weeklyTarget ?? 5)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const toggleDay = (day: number) => {
     setScheduledDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort(),
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     )
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+  const canSave =
+    name.trim().length > 0 &&
+    (type !== 'scheduled' || scheduledDays.length > 0)
 
+  const handleSubmit = () => {
+    if (!canSave) return
     onSave({
       name: name.trim(),
       type,
       emoji,
       timeLabel: timeLabel.trim() || undefined,
-      scheduledDays: type === 'scheduled' ? scheduledDays : undefined,
+      scheduledDays: type === 'scheduled' ? [...scheduledDays].sort() : undefined,
       weeklyTarget: type === 'weekly_target' ? weeklyTarget : undefined,
     })
   }
 
-  return (
-    <div
-      className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-stone-900/40 backdrop-blur-sm sm:items-center"
-      onClick={onCancel}
-    >
-      <form
-        onSubmit={handleSubmit}
-        onClick={(e) => e.stopPropagation()}
-        className="sheet-panel max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 pb-8 shadow-2xl sm:rounded-3xl"
-      >
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
+  const preview: Habit = {
+    id: 'preview',
+    name: name.trim() || 'New habit',
+    type,
+    scheduledDays,
+    weeklyTarget,
+  }
 
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-stone-800">
-            {habit ? 'Edit habit' : 'New habit'}
-          </h2>
+  return (
+    <Sheet
+      title={habit ? 'Edit habit' : 'New habit'}
+      onClose={onCancel}
+      footer={
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full p-2 text-warm-gray hover:bg-cream"
+            className="flex-1 rounded-2xl border border-line py-3.5 text-[15px] font-semibold text-muted transition active:scale-[0.98]"
           >
-            <X className="h-5 w-5" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSave}
+            className="flex-[1.4] rounded-2xl bg-accent py-3.5 text-[15px] font-semibold text-canvas shadow-glow transition active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
+          >
+            {habit ? 'Save changes' : 'Add habit'}
           </button>
         </div>
-
-        <label className="mb-5 block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-            Name
+      }
+    >
+      <div className="space-y-6 pb-2">
+        <div className="flex items-center gap-3.5 rounded-3xl bg-accent-wash px-4 py-3.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-surface text-[1.35rem] shadow-soft">
+            {emoji}
           </span>
+          <span className="min-w-0">
+            <span className="block truncate text-[15px] font-semibold text-ink">
+              {preview.name}
+            </span>
+            <span className="block text-[13px] text-accent-ink">
+              {describeSchedule(preview)}
+              {timeLabel.trim() ? ` · ${timeLabel.trim()}` : ''}
+            </span>
+          </span>
+        </div>
+
+        <div>
+          <FieldLabel>Name</FieldLabel>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Gym, Wake up, Read"
-            className="w-full rounded-2xl border border-cream-dark bg-cream px-4 py-3.5 text-base outline-none transition focus:border-sage focus:ring-4 focus:ring-sage/15"
+            placeholder="Gym, wake up, read…"
+            className={inputClass}
             autoFocus
           />
-        </label>
+        </div>
 
-        <div className="mb-5">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-            Icon
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {EMOJI_OPTIONS.map((e) => (
+        <div>
+          <FieldLabel>Icon</FieldLabel>
+          <div className="grid grid-cols-8 gap-1.5">
+            {EMOJI_OPTIONS.map((option) => (
               <button
-                key={e}
+                key={option}
                 type="button"
-                onClick={() => setEmoji(e)}
-                className={`flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-all active:scale-95 ${
-                  emoji === e
-                    ? 'bg-sage/15 ring-2 ring-sage shadow-sm'
-                    : 'bg-cream hover:bg-cream-dark'
+                onClick={() => setEmoji(option)}
+                aria-label={`Icon ${option}`}
+                aria-pressed={emoji === option}
+                className={`grid aspect-square place-items-center rounded-xl text-lg transition active:scale-90 ${
+                  emoji === option
+                    ? 'bg-accent/15 ring-2 ring-accent'
+                    : 'bg-canvas hover:bg-accent-wash'
                 }`}
               >
-                {e}
+                {option}
               </button>
             ))}
           </div>
         </div>
 
-        <label className="mb-5 block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-            Time label (optional)
-          </span>
-          <input
-            type="text"
-            value={timeLabel}
-            onChange={(e) => setTimeLabel(e.target.value)}
-            placeholder="e.g. 8:00 AM"
-            className="w-full rounded-2xl border border-cream-dark bg-cream px-4 py-3.5 text-base outline-none transition focus:border-sage focus:ring-4 focus:ring-sage/15"
-          />
-        </label>
-
-        <div className="mb-5">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-            Schedule
-          </span>
+        <div>
+          <FieldLabel>Rhythm</FieldLabel>
           <div className="space-y-2">
-            {TYPE_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setType(option.id)}
-                className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.99] ${
-                  type === option.id
-                    ? 'border-sage bg-sage-muted shadow-sm'
-                    : 'border-cream-dark bg-cream hover:border-sage/30'
-                }`}
-              >
-                <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    type === option.id ? 'border-sage bg-sage' : 'border-cream-dark'
+            {TYPE_OPTIONS.map((option) => {
+              const active = type === option.id
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setType(option.id)}
+                  aria-pressed={active}
+                  className={`flex w-full items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition active:scale-[0.99] ${
+                    active
+                      ? 'border-accent bg-accent-wash'
+                      : 'border-line bg-canvas hover:border-line-strong'
                   }`}
                 >
-                  {type === option.id && (
-                    <span className="h-2 w-2 rounded-full bg-white" />
-                  )}
-                </span>
-                <span>
-                  <span className="block font-semibold text-stone-800">
-                    {option.label}
+                  <span
+                    className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
+                      active ? 'border-accent bg-accent' : 'border-line-strong'
+                    }`}
+                  >
+                    {active && (
+                      <span className="size-1.5 rounded-full bg-canvas" />
+                    )}
                   </span>
-                  <span className="block text-sm text-warm-gray-light">
-                    {option.description}
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold text-ink">
+                      {option.label}
+                    </span>
+                    <span className="block text-[13px] text-muted">
+                      {option.description}
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         {type === 'scheduled' && (
-          <div className="mb-5">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-              Days
-            </span>
+          <div>
+            <FieldLabel>Which days</FieldLabel>
             <div className="flex gap-1.5">
-              {DAY_LABELS.map((label, i) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => toggleDay(i)}
-                  className={`flex h-11 flex-1 items-center justify-center rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                    scheduledDays.includes(i)
-                      ? 'bg-sage text-white shadow-sm'
-                      : 'bg-cream text-warm-gray hover:bg-cream-dark'
-                  }`}
-                >
-                  {label.slice(0, 1)}
-                </button>
-              ))}
+              {WEEK_DAY_ORDER.map((day) => {
+                const active = scheduledDays.includes(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    aria-label={DAY_LABELS[day]}
+                    aria-pressed={active}
+                    className={`h-11 flex-1 rounded-xl text-[13px] font-bold transition active:scale-95 ${
+                      active
+                        ? 'bg-accent text-canvas shadow-glow'
+                        : 'bg-canvas text-muted hover:bg-accent-wash'
+                    }`}
+                  >
+                    {DAY_LABELS[day].slice(0, 1)}
+                  </button>
+                )
+              })}
             </div>
+            {scheduledDays.length === 0 && (
+              <p className="mt-2 text-[13px] text-rose">Pick at least one day.</p>
+            )}
           </div>
         )}
 
         {type === 'weekly_target' && (
-          <div className="mb-5">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-              Times per week
-            </span>
-            <div className="flex items-center gap-4 rounded-2xl border border-cream-dark bg-cream px-4 py-3">
+          <div>
+            <FieldLabel>Times per week</FieldLabel>
+            <div className="flex items-center gap-4 rounded-2xl border border-line bg-canvas p-2.5">
               <button
                 type="button"
                 onClick={() => setWeeklyTarget((v) => Math.max(1, v - 1))}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm active:scale-95"
+                aria-label="Decrease target"
+                className="grid size-11 place-items-center rounded-xl bg-surface text-ink shadow-soft transition active:scale-90"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="size-4" />
               </button>
-              <span className="flex-1 text-center text-2xl font-bold tabular-nums text-stone-800">
+              <span className="flex-1 text-center text-2xl font-bold tabular-nums text-ink">
                 {weeklyTarget}
               </span>
               <button
                 type="button"
                 onClick={() => setWeeklyTarget((v) => Math.min(7, v + 1))}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm active:scale-95"
+                aria-label="Increase target"
+                className="grid size-11 place-items-center rounded-xl bg-surface text-ink shadow-soft transition active:scale-90"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
               </button>
             </div>
           </div>
         )}
 
-        <div className="mt-6 flex gap-3">
+        <div>
+          <FieldLabel>Time of day (optional)</FieldLabel>
+          <input
+            type="text"
+            value={timeLabel}
+            onChange={(e) => setTimeLabel(e.target.value)}
+            placeholder="8:00 AM"
+            className={inputClass}
+          />
+        </div>
+
+        {onDelete && (
           <button
             type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-2xl border border-cream-dark py-3.5 font-semibold text-warm-gray active:scale-[0.98]"
+            onClick={() => {
+              if (confirmDelete) onDelete()
+              else setConfirmDelete(true)
+            }}
+            className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${
+              confirmDelete
+                ? 'border-rose bg-rose/10 text-rose'
+                : 'border-line text-muted hover:text-rose'
+            }`}
           >
-            Cancel
+            <span className="flex items-center gap-2.5">
+              <Trash2 className="size-4" />
+              {confirmDelete ? 'Tap again to delete' : 'Delete habit'}
+            </span>
+            <ChevronRight className="size-4 opacity-50" />
           </button>
-          <button
-            type="submit"
-            disabled={!name.trim()}
-            className="flex-1 rounded-2xl bg-sage py-3.5 font-semibold text-white shadow-[0_4px_12px_rgba(90,138,122,0.35)] disabled:opacity-50 active:scale-[0.98]"
-          >
-            Save habit
-          </button>
-        </div>
-      </form>
-    </div>
+        )}
+      </div>
+    </Sheet>
   )
 }
 
 interface HabitListItemProps {
   habit: Habit
   onEdit: () => void
-  onDelete: () => void
+  index?: number
 }
 
 const TYPE_BADGE: Record<HabitType, string> = {
   daily: 'Daily',
-  scheduled: 'Scheduled',
+  scheduled: 'Custom',
   weekly_target: 'Weekly',
 }
 
-export function HabitListItem({ habit, onEdit, onDelete }: HabitListItemProps) {
-  const scheduleLabel =
-    habit.type === 'daily'
-      ? 'Every day'
-      : habit.type === 'scheduled'
-        ? `${habit.scheduledDays?.map((d) => DAY_LABELS[d]).join(', ') ?? ''}`
-        : `${habit.weeklyTarget}x per week`
-
+export function HabitListItem({ habit, onEdit, index = 0 }: HabitListItemProps) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(45,42,38,0.06)]">
-      <button
-        type="button"
-        onClick={onEdit}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-80"
-      >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-muted text-2xl">
-          {habit.emoji ?? '✓'}
+    <button
+      type="button"
+      onClick={onEdit}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className="animate-rise group flex w-full items-center gap-3.5 rounded-4xl border border-line bg-surface px-4 py-3.5 text-left shadow-soft transition-all duration-300 ease-spring hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.985]"
+    >
+      <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-accent-wash text-[1.35rem]">
+        {habit.emoji ?? '✓'}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="truncate text-[16px] font-semibold tracking-[-0.015em] text-ink">
+            {habit.name}
+          </span>
+          <span className="shrink-0 rounded-md bg-accent-wash px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-ink">
+            {TYPE_BADGE[habit.type]}
+          </span>
         </span>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="truncate font-semibold text-stone-800">{habit.name}</p>
-            <span className="shrink-0 rounded-md bg-cream-dark px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warm-gray">
-              {TYPE_BADGE[habit.type]}
-            </span>
-          </div>
-          <p className="truncate text-sm text-warm-gray-light">
-            {scheduleLabel}
-            {habit.timeLabel ? ` · ${habit.timeLabel}` : ''}
-          </p>
-        </div>
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="rounded-xl p-2.5 text-warm-gray-light transition hover:bg-red-50 hover:text-red-500 active:scale-95"
-        aria-label={`Delete ${habit.name}`}
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </div>
+        <span className="mt-0.5 block truncate text-[13px] text-muted">
+          {describeSchedule(habit)}
+          {habit.timeLabel ? ` · ${habit.timeLabel}` : ''}
+        </span>
+      </span>
+
+      <ChevronRight className="size-4.5 shrink-0 text-faint transition group-hover:translate-x-0.5 group-hover:text-accent" />
+    </button>
   )
 }

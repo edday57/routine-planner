@@ -16,37 +16,35 @@ export function HabitsPage({ habits, onAdd, onUpdate, onDelete }: HabitsPageProp
   const [showForm, setShowForm] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>()
 
-  const handleSave = (data: Omit<Habit, 'id'>) => {
-    if (editingHabit) {
-      onUpdate(editingHabit.id, data)
-    } else {
-      onAdd(data)
-    }
+  const closeForm = () => {
     setShowForm(false)
     setEditingHabit(undefined)
   }
 
-  const handleEdit = (habit: Habit) => {
-    setEditingHabit(habit)
+  const handleSave = (data: Omit<Habit, 'id'>) => {
+    if (editingHabit) onUpdate(editingHabit.id, data)
+    else onAdd(data)
+    closeForm()
+  }
+
+  const openNew = () => {
+    setEditingHabit(undefined)
     setShowForm(true)
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Habits"
-        subtitle="Set up once, reuse every week"
+        subtitle="Set them up once, reuse every week"
         action={
           <button
             type="button"
-            onClick={() => {
-              setEditingHabit(undefined)
-              setShowForm(true)
-            }}
-            className="flex items-center gap-1.5 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(90,138,122,0.35)] active:scale-95"
+            onClick={openNew}
+            className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-[14px] font-semibold text-canvas shadow-glow transition active:scale-95"
           >
-            <Plus className="h-4 w-4" />
-            Add
+            <Plus className="size-4" strokeWidth={2.5} />
+            New
           </button>
         }
       />
@@ -55,29 +53,28 @@ export function HabitsPage({ habits, onAdd, onUpdate, onDelete }: HabitsPageProp
         <EmptyState
           emoji="✨"
           title="No habits yet"
-          description="Start with one small thing — wake up time, a walk, reading. Small wins build momentum."
+          description="Start with one small thing — a wake-up time, a short walk, ten pages. Small wins build the momentum."
           action={
             <button
               type="button"
-              onClick={() => setShowForm(true)}
-              className="rounded-xl bg-sage px-5 py-2.5 text-sm font-semibold text-white shadow-sm active:scale-95"
+              onClick={openNew}
+              className="rounded-full bg-accent px-5 py-3 text-[14px] font-semibold text-canvas shadow-glow transition active:scale-95"
             >
               Add your first habit
             </button>
           }
         />
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2.5">
           {habits.map((habit, i) => (
-            <li
-              key={habit.id}
-              style={{ animationDelay: `${i * 50}ms` }}
-              className="animate-fade-up"
-            >
+            <li key={habit.id}>
               <HabitListItem
                 habit={habit}
-                onEdit={() => handleEdit(habit)}
-                onDelete={() => onDelete(habit.id)}
+                index={i}
+                onEdit={() => {
+                  setEditingHabit(habit)
+                  setShowForm(true)
+                }}
               />
             </li>
           ))}
@@ -88,10 +85,15 @@ export function HabitsPage({ habits, onAdd, onUpdate, onDelete }: HabitsPageProp
         <HabitForm
           habit={editingHabit}
           onSave={handleSave}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingHabit(undefined)
-          }}
+          onCancel={closeForm}
+          onDelete={
+            editingHabit
+              ? () => {
+                  onDelete(editingHabit.id)
+                  closeForm()
+                }
+              : undefined
+          }
         />
       )}
     </div>

@@ -20,8 +20,9 @@ export function WeekPage({
   onToggle,
 }: WeekPageProps) {
   const weekDates = getWeekDates(weekAnchor)
-  const start = weekDates[0]
-  const end = weekDates[6]
+  const [start, end] = [weekDates[0], weekDates[6]]
+  const isCurrentWeek =
+    formatDate(getWeekDates(new Date())[0]) === formatDate(start)
 
   const shiftWeek = (delta: number) => {
     const next = new Date(weekAnchor)
@@ -29,38 +30,40 @@ export function WeekPage({
     onWeekChange(next)
   }
 
-  const goToThisWeek = () => onWeekChange(new Date())
-
-  const isCurrentWeek =
-    formatDate(getWeekDates(new Date())[0]) === formatDate(weekDates[0])
-
   return (
-    <div className="space-y-6">
-      <PageHeader title="Week" subtitle="See how the week is shaping up" />
+    <div className="space-y-5">
+      <PageHeader
+        title="Week"
+        subtitle={isCurrentWeek ? 'How this week is shaping up' : 'Looking back'}
+      />
 
-      <div className="flex items-center justify-between rounded-2xl border border-white/80 bg-white px-3 py-2.5 shadow-[0_2px_12px_rgba(45,42,38,0.06)]">
+      <div className="flex items-center gap-2 rounded-full border border-line bg-surface p-1.5 shadow-soft">
         <button
           type="button"
           onClick={() => shiftWeek(-1)}
-          className="rounded-xl p-2.5 text-warm-gray transition hover:bg-cream active:scale-95"
           aria-label="Previous week"
+          className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-accent-wash hover:text-ink active:scale-90"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="size-4.5" />
         </button>
 
-        <div className="text-center">
-          <p className="font-semibold text-stone-800">
+        <div className="min-w-0 flex-1 text-center">
+          <p className="truncate text-[15px] font-semibold tracking-[-0.015em] text-ink">
             {start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
             {' – '}
             {end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
           </p>
-          {!isCurrentWeek && (
+          {isCurrentWeek ? (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+              This week
+            </p>
+          ) : (
             <button
               type="button"
-              onClick={goToThisWeek}
-              className="mt-0.5 text-sm font-semibold text-sage active:opacity-70"
+              onClick={() => onWeekChange(new Date())}
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent transition active:opacity-60"
             >
-              Jump to this week
+              Back to today
             </button>
           )}
         </div>
@@ -68,10 +71,10 @@ export function WeekPage({
         <button
           type="button"
           onClick={() => shiftWeek(1)}
-          className="rounded-xl p-2.5 text-warm-gray transition hover:bg-cream active:scale-95"
           aria-label="Next week"
+          className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-accent-wash hover:text-ink active:scale-90"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="size-4.5" />
         </button>
       </div>
 

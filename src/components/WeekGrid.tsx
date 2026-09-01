@@ -1,15 +1,18 @@
+import { Check } from 'lucide-react'
 import type { Completion, Habit } from '../types'
 import {
   canToggleOnDay,
+  describeSchedule,
   formatDate,
   getWeekDates,
   isCompletedOnDate,
   isHabitScheduledOnDay,
   isSameDay,
 } from '../lib/weekUtils'
-import { getWeekSummary } from '../lib/progress'
+import { getWeekOverview, getWeekSummary } from '../lib/progress'
 import { hapticLight, hapticSuccess } from '../lib/haptics'
 import { EmptyState } from './EmptyState'
+import { ProgressRing } from './ProgressRing'
 
 interface WeekGridProps {
   habits: Habit[]
@@ -18,12 +21,19 @@ interface WeekGridProps {
   onToggle: (habitId: string, date: string) => void
 }
 
-export function WeekGrid({ habits, completions, weekAnchor, onToggle }: WeekGridProps) {
+export function WeekGrid({
+  habits,
+  completions,
+  weekAnchor,
+  onToggle,
+}: WeekGridProps) {
   const weekDates = getWeekDates(weekAnchor)
   const summary = getWeekSummary(habits, completions, weekDates)
+  const overview = getWeekOverview(habits, completions, weekDates)
+  const today = new Date()
 
-  const handleToggle = (habitId: string, dateStr: string, wasCompleted: boolean) => {
-    if (wasCompleted) hapticLight()
+  const handleToggle = (habitId: string, dateStr: string, wasDone: boolean) => {
+    if (wasDone) hapticLight()
     else hapticSuccess()
     onToggle(habitId, dateStr)
   }
@@ -32,135 +42,135 @@ export function WeekGrid({ habits, completions, weekAnchor, onToggle }: WeekGrid
     return (
       <EmptyState
         emoji="📅"
-        title="No habits yet"
-        description="Add habits in the library to see your week fill in."
+        title="Nothing to show yet"
+        description="Add a few habits and your week will start filling in here."
       />
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-5xl border border-line bg-surface p-5 shadow-lift">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-16 -top-20 size-52 rounded-full bg-accent/10 blur-3xl"
+        />
+        <div className="relative flex items-center gap-5">
+          <ProgressRing percent={overview.percent} size={88} strokeWidth={9}>
+            <span className="text-[20px] font-bold tabular-nums tracking-[-0.03em] text-ink">
+              {Math.round(overview.percent)}%
+            </span>
+          </ProgressRing>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+              Week progress
+            </p>
+            <p className="mt-1.5 text-[22px] font-bold leading-tight tracking-[-0.03em] text-ink">
+              {overview.completed} of {overview.total}
+            </p>
+            <p className="mt-1 text-[13px] text-muted">
+              habit check-offs completed
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div className="space-y-3">
-        {habits.map((habit, habitIndex) => (
-          <div
+        {summary.map(({ habit, progress }, habitIndex) => (
+          <section
             key={habit.id}
-            style={{ animationDelay: `${habitIndex * 50}ms` }}
-            className="animate-fade-up rounded-2xl border border-white/80 bg-white p-4 shadow-[0_2px_12px_rgba(45,42,38,0.06)]"
+            style={{ animationDelay: `${habitIndex * 55}ms` }}
+            className="animate-rise rounded-4xl border border-line bg-surface p-4 shadow-soft"
           >
-            <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage-muted text-xl">
+            <div className="mb-3.5 flex items-center gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent-wash text-xl">
                 {habit.emoji ?? '✓'}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-stone-800">{habit.name}</p>
-                <p className="text-xs text-warm-gray-light">
-                  {habit.type === 'weekly_target'
-                    ? `${habit.weeklyTarget}x per week`
-                    : habit.type === 'scheduled'
-                      ? 'Specific days'
-                      : 'Every day'}
+                <p className="truncate text-[15px] font-semibold tracking-[-0.015em] text-ink">
+                  {habit.name}
                 </p>
+                <p className="text-[12px] text-faint">{describeSchedule(habit)}</p>
               </div>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${
+                  progress.percent >= 100
+                    ? 'bg-accent text-canvas'
+                    : 'bg-accent-wash text-accent-ink'
+                }`}
+              >
+                {progress.completed}/{progress.total}
+              </span>
             </div>
 
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="flex gap-1.5">
               {weekDates.map((date) => {
                 const dateStr = formatDate(date)
                 const scheduled = isHabitScheduledOnDay(habit, date)
                 const completed = isCompletedOnDate(habit.id, dateStr, completions)
-                const canToggle = canToggleOnDay(
-                  habit,
-                  date,
-                  completions,
-                  weekDates,
-                )
-                const isToday = isSameDay(date, new Date())
+                const enabled =
+                  completed || canToggleOnDay(habit, date, completions, weekDates)
+                const isToday = isSameDay(date, today)
 
                 return (
-                  <div key={dateStr} className="flex flex-col items-center gap-1">
+                  <div
+                    key={dateStr}
+                    className="flex flex-1 flex-col items-center gap-1.5"
+                  >
                     <span
-                      className={`text-[10px] font-semibold uppercase ${
-                        isToday ? 'text-sage' : 'text-warm-gray-light'
+                      className={`text-[10px] font-bold uppercase tracking-wider ${
+                        isToday ? 'text-accent' : 'text-faint'
                       }`}
                     >
                       {date.toLocaleDateString('en-GB', { weekday: 'narrow' })}
                     </span>
+
                     {scheduled ? (
                       <button
                         type="button"
-                        disabled={!canToggle && !completed}
+                        disabled={!enabled}
                         onClick={() => handleToggle(habit.id, dateStr, completed)}
-                        className={`flex h-10 w-full flex-col items-center justify-center rounded-xl transition-all active:scale-90 ${
+                        aria-pressed={completed}
+                        aria-label={`${habit.name} on ${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}`}
+                        className={`grid h-11 w-full place-items-center rounded-2xl transition-all duration-300 ease-spring active:scale-90 ${
                           completed
-                            ? 'bg-sage text-white shadow-[0_2px_6px_rgba(90,138,122,0.3)]'
-                            : canToggle
-                              ? isToday
-                                ? 'bg-sage-muted ring-2 ring-sage/30'
-                                : 'bg-cream hover:bg-cream-dark'
-                              : 'bg-cream/40 opacity-50'
+                            ? 'bg-accent text-canvas shadow-glow'
+                            : enabled
+                              ? `bg-canvas text-muted hover:bg-accent-wash ${
+                                  isToday
+                                    ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface'
+                                    : ''
+                                }`
+                              : 'bg-canvas/60 text-faint opacity-50'
                         }`}
-                        aria-label={`Toggle ${habit.name} on ${dateStr}`}
                       >
-                        <span className="text-[10px] font-medium tabular-nums">
-                          {date.getDate()}
-                        </span>
-                        {completed && (
-                          <span className="text-[10px] font-bold leading-none">✓</span>
+                        {completed ? (
+                          <Check className="size-4" strokeWidth={3} />
+                        ) : (
+                          <span className="text-[13px] font-semibold tabular-nums">
+                            {date.getDate()}
+                          </span>
                         )}
                       </button>
                     ) : (
-                      <span className="flex h-10 w-full items-center justify-center rounded-xl bg-transparent">
-                        <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                      <span className="grid h-11 w-full place-items-center">
+                        <span className="size-1 rounded-full bg-line-strong" />
                       </span>
                     )}
                   </div>
                 )
               })}
             </div>
-          </div>
+
+            <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-line-strong/50">
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-700 ease-spring"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+          </section>
         ))}
       </div>
-
-      <section>
-        <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-warm-gray-light">
-          Week progress
-        </h3>
-        <div className="space-y-3">
-          {summary.map(({ habit, progress }, i) => (
-            <div
-              key={habit.id}
-              style={{ animationDelay: `${i * 40}ms` }}
-              className="animate-fade-up rounded-2xl border border-white/80 bg-white p-4 shadow-[0_2px_12px_rgba(45,42,38,0.06)]"
-            >
-              <div className="mb-2.5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{habit.emoji ?? '✓'}</span>
-                  <span className="font-semibold text-stone-800">{habit.name}</span>
-                </div>
-                <span className="rounded-full bg-sage-muted px-2.5 py-0.5 text-xs font-bold tabular-nums text-sage-dark">
-                  {progress.completed}/{progress.total}
-                </span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-cream-dark">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-sage-light to-sage transition-all duration-700 ease-out"
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-              {progress.percent >= 100 && (
-                <p className="mt-2 text-sm font-medium text-sage">
-                  Nice work this week!
-                </p>
-              )}
-              {progress.percent > 0 && progress.percent < 100 && (
-                <p className="mt-2 text-sm text-warm-gray-light">
-                  {Math.round(progress.percent)}% — keep going
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

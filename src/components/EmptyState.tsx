@@ -9,15 +9,17 @@ interface EmptyStateProps {
 
 export function EmptyState({ emoji, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center rounded-3xl border border-dashed border-cream-dark bg-white/50 px-6 py-10 text-center">
-      <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-sage-muted text-3xl">
+    <div className="flex flex-col items-center rounded-4xl border border-dashed border-line-strong bg-surface/60 px-6 py-12 text-center">
+      <span className="mb-4 grid size-16 place-items-center rounded-3xl bg-accent-wash text-3xl">
         {emoji}
       </span>
-      <p className="font-medium text-stone-800">{title}</p>
-      <p className="mt-1 max-w-[240px] text-sm leading-relaxed text-warm-gray-light">
+      <p className="text-base font-semibold tracking-[-0.01em] text-ink">
+        {title}
+      </p>
+      <p className="mt-1.5 max-w-[15rem] text-sm leading-relaxed text-muted">
         {description}
       </p>
-      {action && <div className="mt-5">{action}</div>}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   )
 }
