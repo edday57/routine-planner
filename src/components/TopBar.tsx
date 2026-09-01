@@ -12,8 +12,8 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div className="flex items-center gap-2.5">
-        <span className="grid size-8 place-items-center rounded-xl bg-accent text-surface shadow-glow">
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+        <span className="accent-fill grid size-9 place-items-center rounded-2xl text-on-accent shadow-glow">
+          <svg viewBox="0 0 24 24" className="size-4.5" aria-hidden="true">
             <path
               d="M6 12.5l3.5 3.5L18 7.5"
               fill="none"
@@ -33,7 +33,7 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
         type="button"
         onClick={onToggleTheme}
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="grid size-10 place-items-center rounded-full border border-line bg-surface text-muted shadow-soft transition hover:text-ink active:scale-90"
+        className="glass grid size-10 place-items-center rounded-full text-muted transition hover:text-ink active:scale-90"
       >
         {isDark ? <Moon className="size-4.5" /> : <Sun className="size-4.5" />}
       </button>

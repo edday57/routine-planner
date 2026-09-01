@@ -37,7 +37,7 @@ export function WeekPage({
         subtitle={isCurrentWeek ? 'How this week is shaping up' : 'Looking back'}
       />
 
-      <div className="flex items-center gap-2 rounded-full border border-line bg-surface p-1.5 shadow-soft">
+      <div className="glass flex items-center gap-2 rounded-full p-1.5">
         <button
           type="button"
           onClick={() => shiftWeek(-1)}
@@ -54,14 +54,14 @@ export function WeekPage({
             {end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
           </p>
           {isCurrentWeek ? (
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink">
               This week
             </p>
           ) : (
             <button
               type="button"
               onClick={() => onWeekChange(new Date())}
-              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent transition active:opacity-60"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink transition active:opacity-60"
             >
               Back to today
             </button>

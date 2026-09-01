@@ -14,21 +14,21 @@ interface HabitRowProps {
 
 function WeeklyMeter({ count, target }: { count: number; target: number }) {
   return (
-    <div className="mt-2.5 flex items-center gap-2">
-      <div className="flex flex-1 gap-1">
+    <span className="mt-2.5 flex items-center gap-2">
+      <span className="flex flex-1 gap-1">
         {Array.from({ length: target }, (_, i) => (
           <span
             key={i}
-            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
-              i < count ? 'bg-accent' : 'bg-line-strong'
+            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+              i < count ? 'accent-fill' : 'bg-line-strong'
             }`}
           />
         ))}
-      </div>
+      </span>
       <span className="text-[11px] font-semibold tabular-nums text-accent-ink">
         {count}/{target}
       </span>
-    </div>
+    </span>
   )
 }
 
@@ -57,17 +57,13 @@ export function HabitRow({
       onClick={handleToggle}
       aria-pressed={completed}
       style={{ animationDelay: `${index * 55}ms` }}
-      className={`animate-rise group flex w-full items-center gap-3.5 rounded-4xl border px-4 py-3.5 text-left transition-all duration-300 ease-spring active:scale-[0.985] ${
-        completed
-          ? 'border-transparent bg-accent-wash'
-          : 'border-line bg-surface shadow-soft hover:-translate-y-0.5 hover:shadow-lift'
+      className={`animate-rise group flex w-full items-center gap-3.5 rounded-4xl px-4 py-3.5 text-left transition-all duration-300 ease-spring active:scale-[0.985] ${
+        completed ? 'glass-tint' : 'glass hover:-translate-y-0.5'
       }`}
     >
       <span
-        className={`grid size-11 shrink-0 place-items-center rounded-2xl text-[1.35rem] transition-transform duration-300 ${
-          completed
-            ? 'bg-accent/15 opacity-60'
-            : 'bg-accent-wash group-active:scale-95'
+        className={`glass-well grid size-11 shrink-0 place-items-center rounded-2xl text-[1.35rem] transition-transform duration-300 ${
+          completed ? 'opacity-55' : 'group-active:scale-95'
         }`}
       >
         {habit.emoji ?? '✓'}
@@ -100,15 +96,15 @@ export function HabitRow({
       </span>
 
       <span
-        className={`grid size-11 shrink-0 place-items-center rounded-full border-2 transition-all duration-300 ${
+        className={`grid size-11 shrink-0 place-items-center rounded-full transition-all duration-300 ${
           completed
-            ? 'animate-check-pop border-transparent bg-accent shadow-glow'
-            : 'border-line-strong bg-canvas group-hover:border-accent/50'
+            ? 'accent-fill animate-check-pop shadow-glow'
+            : 'glass-well border-2 border-line-strong group-hover:border-accent/60'
         }`}
       >
         {completed && (
           <Check
-            className="animate-check-draw size-5 text-canvas"
+            className="animate-check-draw size-5 text-on-accent"
             strokeWidth={3}
           />
         )}

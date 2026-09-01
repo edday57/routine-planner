@@ -47,12 +47,10 @@ function WeekStrip({
   const weekDates = getWeekDates(today)
 
   return (
-    <section className="rounded-4xl border border-line bg-surface p-4 shadow-soft">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-faint">
-          This week
-        </h2>
-      </div>
+    <section className="glass rounded-4xl p-4">
+      <h2 className="mb-3 px-1 text-[11px] font-bold uppercase tracking-[0.16em] text-faint">
+        This week
+      </h2>
       <div className="flex gap-1.5">
         {weekDates.map((date) => {
           const stats = getDayStats(habits, completions, date)
@@ -61,28 +59,35 @@ function WeekStrip({
           const filled = stats.percent >= 100 && stats.completed > 0
 
           return (
-            <div key={formatDate(date)} className="flex flex-1 flex-col items-center gap-1.5">
+            <div
+              key={formatDate(date)}
+              className="flex flex-1 flex-col items-center gap-1.5"
+            >
               <span
                 className={`text-[10px] font-bold uppercase tracking-wider ${
-                  isToday ? 'text-accent' : 'text-faint'
+                  isToday ? 'text-accent-ink' : 'text-faint'
                 }`}
               >
                 {date.toLocaleDateString('en-GB', { weekday: 'narrow' })}
               </span>
               <div
-                className={`relative grid h-11 w-full place-items-center overflow-hidden rounded-2xl transition-colors ${
-                  isToday ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''
-                } ${filled ? 'bg-accent' : isFuture ? 'bg-canvas' : 'bg-canvas'}`}
+                className={`relative grid h-11 w-full place-items-center overflow-hidden rounded-2xl transition-all ${
+                  filled ? 'accent-fill shadow-glow' : 'glass-well'
+                } ${isToday ? 'ring-2 ring-accent-hi ring-offset-2 ring-offset-transparent' : ''}`}
               >
                 {!filled && stats.percent > 0 && (
                   <span
-                    className="absolute inset-x-0 bottom-0 bg-accent/30 transition-[height] duration-500"
+                    className="accent-fill absolute inset-x-0 bottom-0 opacity-40 transition-[height] duration-500"
                     style={{ height: `${stats.percent}%` }}
                   />
                 )}
                 <span
                   className={`relative text-[13px] font-bold tabular-nums ${
-                    filled ? 'text-canvas' : isFuture ? 'text-faint' : 'text-muted'
+                    filled
+                      ? 'text-on-accent'
+                      : isFuture
+                        ? 'text-faint'
+                        : 'text-muted'
                   }`}
                 >
                   {date.getDate()}
@@ -116,10 +121,10 @@ export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
 
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-5xl border border-line bg-surface p-5 shadow-lift">
+      <section className="glass relative overflow-hidden rounded-5xl p-5">
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute -right-20 -top-24 size-60 rounded-full bg-accent/12 blur-3xl ${
+          className={`accent-fill pointer-events-none absolute -right-24 -top-28 size-60 rounded-full opacity-30 blur-3xl ${
             allDone ? 'animate-breathe' : ''
           }`}
         />
@@ -135,7 +140,7 @@ export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
           </ProgressRing>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent-ink">
               {getGreeting(today)}
             </p>
             <h1 className="mt-1.5 text-[26px] font-bold leading-none tracking-[-0.03em] text-ink">
@@ -154,7 +159,7 @@ export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
         </div>
 
         {streak > 0 && (
-          <div className="relative mt-4 inline-flex items-center gap-2 rounded-full bg-amber-wash px-3.5 py-2">
+          <div className="relative mt-4 inline-flex items-center gap-2 rounded-full bg-amber-wash px-3.5 py-2 ring-1 ring-amber/25">
             <Flame className="size-4 text-amber" />
             <span className="text-[13px] font-semibold text-amber-ink">
               {streak} day{streak === 1 ? '' : 's'} in a row
@@ -163,8 +168,8 @@ export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
         )}
 
         {allDone && (
-          <div className="relative mt-4 flex items-center gap-3 rounded-3xl bg-accent-wash px-4 py-3.5">
-            <PartyPopper className="size-4.5 shrink-0 text-accent" />
+          <div className="relative mt-4 flex items-center gap-3 rounded-3xl bg-accent-wash px-4 py-3.5 ring-1 ring-accent/25">
+            <PartyPopper className="size-4.5 shrink-0 text-accent-ink" />
             <p className="text-[13px] font-medium text-accent-ink">
               Everything ticked off. You showed up today — that counts.
             </p>

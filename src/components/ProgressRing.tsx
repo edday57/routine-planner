@@ -29,7 +29,8 @@ export function ProgressRing({
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--c-accent-hi)" />
-            <stop offset="100%" stopColor="var(--c-accent)" />
+            <stop offset="55%" stopColor="var(--c-accent)" />
+            <stop offset="100%" stopColor="var(--c-cyan)" />
           </linearGradient>
         </defs>
         <circle
@@ -39,7 +40,7 @@ export function ProgressRing({
           fill="none"
           stroke="var(--c-line-strong)"
           strokeWidth={strokeWidth}
-          opacity={0.45}
+          opacity={0.5}
         />
         <circle
           cx={size / 2}

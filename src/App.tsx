@@ -17,38 +17,42 @@ export default function App() {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <div className="mx-auto min-h-full max-w-lg px-4 pb-32 pt-[max(1rem,env(safe-area-inset-top))]">
-      <TopBar theme={theme} onToggleTheme={toggleTheme} />
+    <>
+      <div className="app-backdrop" aria-hidden="true" />
 
-      {/* Opacity-only transition: a lingering transform would capture fixed children. */}
-      <main key={page} className="animate-fade">
-        {page === 'today' && (
-          <TodayPage
-            habits={habits}
-            completions={completions}
-            onToggle={toggleCompletion}
-          />
-        )}
-        {page === 'week' && (
-          <WeekPage
-            habits={habits}
-            completions={completions}
-            weekAnchor={weekAnchor}
-            onWeekChange={setWeekAnchor}
-            onToggle={toggleCompletion}
-          />
-        )}
-        {page === 'habits' && (
-          <HabitsPage
-            habits={habits}
-            onAdd={addHabit}
-            onUpdate={updateHabit}
-            onDelete={deleteHabit}
-          />
-        )}
-      </main>
+      <div className="relative mx-auto min-h-full max-w-lg px-4 pb-32 pt-[max(1rem,env(safe-area-inset-top))]">
+        <TopBar theme={theme} onToggleTheme={toggleTheme} />
 
-      <BottomNav current={page} onChange={setPage} />
-    </div>
+        {/* Opacity-only transition: a lingering transform would capture fixed children. */}
+        <main key={page} className="animate-fade">
+          {page === 'today' && (
+            <TodayPage
+              habits={habits}
+              completions={completions}
+              onToggle={toggleCompletion}
+            />
+          )}
+          {page === 'week' && (
+            <WeekPage
+              habits={habits}
+              completions={completions}
+              weekAnchor={weekAnchor}
+              onWeekChange={setWeekAnchor}
+              onToggle={toggleCompletion}
+            />
+          )}
+          {page === 'habits' && (
+            <HabitsPage
+              habits={habits}
+              onAdd={addHabit}
+              onUpdate={updateHabit}
+              onDelete={deleteHabit}
+            />
+          )}
+        </main>
+
+        <BottomNav current={page} onChange={setPage} />
+      </div>
+    </>
   )
 }

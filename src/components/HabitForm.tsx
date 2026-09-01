@@ -29,7 +29,7 @@ function FieldLabel({ children }: { children: string }) {
 }
 
 const inputClass =
-  'w-full rounded-2xl border border-line bg-canvas px-4 py-3.5 text-[16px] text-ink outline-none transition placeholder:text-faint focus:border-accent focus:bg-surface'
+  'glass-well w-full rounded-2xl px-4 py-3.5 text-[16px] text-ink outline-none transition placeholder:text-faint focus:border-accent-hi'
 
 interface HabitFormProps {
   habit?: Habit
@@ -56,8 +56,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
   }
 
   const canSave =
-    name.trim().length > 0 &&
-    (type !== 'scheduled' || scheduledDays.length > 0)
+    name.trim().length > 0 && (type !== 'scheduled' || scheduledDays.length > 0)
 
   const handleSubmit = () => {
     if (!canSave) return
@@ -88,7 +87,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded-2xl border border-line py-3.5 text-[15px] font-semibold text-muted transition active:scale-[0.98]"
+            className="glass-well flex-1 rounded-2xl py-3.5 text-[15px] font-semibold text-muted transition active:scale-[0.98]"
           >
             Cancel
           </button>
@@ -96,7 +95,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
             type="button"
             onClick={handleSubmit}
             disabled={!canSave}
-            className="flex-[1.4] rounded-2xl bg-accent py-3.5 text-[15px] font-semibold text-canvas shadow-glow transition active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
+            className="accent-fill flex-[1.4] rounded-2xl py-3.5 text-[15px] font-semibold text-on-accent shadow-glow transition active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
           >
             {habit ? 'Save changes' : 'Add habit'}
           </button>
@@ -104,8 +103,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       }
     >
       <div className="space-y-6 pb-2">
-        <div className="flex items-center gap-3.5 rounded-3xl bg-accent-wash px-4 py-3.5">
-          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-surface text-[1.35rem] shadow-soft">
+        <div className="flex items-center gap-3.5 rounded-3xl bg-accent-wash px-4 py-3.5 ring-1 ring-accent/20">
+          <span className="glass-well grid size-11 shrink-0 place-items-center rounded-2xl text-[1.35rem]">
             {emoji}
           </span>
           <span className="min-w-0">
@@ -143,8 +142,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
                 aria-pressed={emoji === option}
                 className={`grid aspect-square place-items-center rounded-xl text-lg transition active:scale-90 ${
                   emoji === option
-                    ? 'bg-accent/15 ring-2 ring-accent'
-                    : 'bg-canvas hover:bg-accent-wash'
+                    ? 'bg-accent-wash ring-2 ring-accent-hi'
+                    : 'glass-well hover:bg-accent-wash'
                 }`}
               >
                 {option}
@@ -164,19 +163,21 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
                   type="button"
                   onClick={() => setType(option.id)}
                   aria-pressed={active}
-                  className={`flex w-full items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition active:scale-[0.99] ${
+                  className={`flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition active:scale-[0.99] ${
                     active
-                      ? 'border-accent bg-accent-wash'
-                      : 'border-line bg-canvas hover:border-line-strong'
+                      ? 'bg-accent-wash ring-2 ring-accent-hi'
+                      : 'glass-well hover:text-ink'
                   }`}
                 >
                   <span
                     className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
-                      active ? 'border-accent bg-accent' : 'border-line-strong'
+                      active
+                        ? 'accent-fill border-transparent'
+                        : 'border-line-strong'
                     }`}
                   >
                     {active && (
-                      <span className="size-1.5 rounded-full bg-canvas" />
+                      <span className="size-1.5 rounded-full bg-on-accent" />
                     )}
                   </span>
                   <span className="min-w-0">
@@ -208,8 +209,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
                     aria-pressed={active}
                     className={`h-11 flex-1 rounded-xl text-[13px] font-bold transition active:scale-95 ${
                       active
-                        ? 'bg-accent text-canvas shadow-glow'
-                        : 'bg-canvas text-muted hover:bg-accent-wash'
+                        ? 'accent-fill text-on-accent shadow-glow'
+                        : 'glass-well text-muted hover:text-ink'
                     }`}
                   >
                     {DAY_LABELS[day].slice(0, 1)}
@@ -226,12 +227,12 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         {type === 'weekly_target' && (
           <div>
             <FieldLabel>Times per week</FieldLabel>
-            <div className="flex items-center gap-4 rounded-2xl border border-line bg-canvas p-2.5">
+            <div className="glass-well flex items-center gap-4 rounded-2xl p-2.5">
               <button
                 type="button"
                 onClick={() => setWeeklyTarget((v) => Math.max(1, v - 1))}
                 aria-label="Decrease target"
-                className="grid size-11 place-items-center rounded-xl bg-surface text-ink shadow-soft transition active:scale-90"
+                className="glass grid size-11 place-items-center rounded-xl text-ink transition active:scale-90"
               >
                 <Minus className="size-4" />
               </button>
@@ -242,7 +243,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
                 type="button"
                 onClick={() => setWeeklyTarget((v) => Math.min(7, v + 1))}
                 aria-label="Increase target"
-                className="grid size-11 place-items-center rounded-xl bg-surface text-ink shadow-soft transition active:scale-90"
+                className="glass grid size-11 place-items-center rounded-xl text-ink transition active:scale-90"
               >
                 <Plus className="size-4" />
               </button>
@@ -268,10 +269,10 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
               if (confirmDelete) onDelete()
               else setConfirmDelete(true)
             }}
-            className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${
+            className={`flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${
               confirmDelete
-                ? 'border-rose bg-rose/10 text-rose'
-                : 'border-line text-muted hover:text-rose'
+                ? 'bg-rose/12 text-rose ring-2 ring-rose/50'
+                : 'glass-well text-muted hover:text-rose'
             }`}
           >
             <span className="flex items-center gap-2.5">
@@ -304,9 +305,9 @@ export function HabitListItem({ habit, onEdit, index = 0 }: HabitListItemProps) 
       type="button"
       onClick={onEdit}
       style={{ animationDelay: `${index * 55}ms` }}
-      className="animate-rise group flex w-full items-center gap-3.5 rounded-4xl border border-line bg-surface px-4 py-3.5 text-left shadow-soft transition-all duration-300 ease-spring hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.985]"
+      className="glass animate-rise group flex w-full items-center gap-3.5 rounded-4xl px-4 py-3.5 text-left transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-[0.985]"
     >
-      <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-accent-wash text-[1.35rem]">
+      <span className="glass-well grid size-11 shrink-0 place-items-center rounded-2xl text-[1.35rem]">
         {habit.emoji ?? '✓'}
       </span>
 
@@ -325,7 +326,7 @@ export function HabitListItem({ habit, onEdit, index = 0 }: HabitListItemProps) 
         </span>
       </span>
 
-      <ChevronRight className="size-4.5 shrink-0 text-faint transition group-hover:translate-x-0.5 group-hover:text-accent" />
+      <ChevronRight className="size-4.5 shrink-0 text-faint transition group-hover:translate-x-0.5 group-hover:text-accent-ink" />
     </button>
   )
 }

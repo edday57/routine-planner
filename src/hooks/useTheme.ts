@@ -4,8 +4,8 @@ export type Theme = 'light' | 'dark'
 
 const THEME_KEY = 'routine-theme'
 const THEME_COLORS: Record<Theme, string> = {
-  light: '#f6f5f2',
-  dark: '#0d0f0e',
+  light: '#eef0fb',
+  dark: '#07070f',
 }
 
 function getInitialTheme(): Theme {

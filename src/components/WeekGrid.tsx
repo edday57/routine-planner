@@ -50,10 +50,10 @@ export function WeekGrid({
 
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-5xl border border-line bg-surface p-5 shadow-lift">
+      <section className="glass relative overflow-hidden rounded-5xl p-5">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-16 -top-20 size-52 rounded-full bg-accent/10 blur-3xl"
+          className="accent-fill pointer-events-none absolute -left-20 -top-24 size-52 rounded-full opacity-25 blur-3xl"
         />
         <div className="relative flex items-center gap-5">
           <ProgressRing percent={overview.percent} size={88} strokeWidth={9}>
@@ -62,7 +62,7 @@ export function WeekGrid({
             </span>
           </ProgressRing>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent-ink">
               Week progress
             </p>
             <p className="mt-1.5 text-[22px] font-bold leading-tight tracking-[-0.03em] text-ink">
@@ -80,10 +80,10 @@ export function WeekGrid({
           <section
             key={habit.id}
             style={{ animationDelay: `${habitIndex * 55}ms` }}
-            className="animate-rise rounded-4xl border border-line bg-surface p-4 shadow-soft"
+            className="glass animate-rise rounded-4xl p-4"
           >
             <div className="mb-3.5 flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent-wash text-xl">
+              <span className="glass-well grid size-10 shrink-0 place-items-center rounded-2xl text-xl">
                 {habit.emoji ?? '✓'}
               </span>
               <div className="min-w-0 flex-1">
@@ -95,7 +95,7 @@ export function WeekGrid({
               <span
                 className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${
                   progress.percent >= 100
-                    ? 'bg-accent text-canvas'
+                    ? 'accent-fill text-on-accent'
                     : 'bg-accent-wash text-accent-ink'
                 }`}
               >
@@ -119,7 +119,7 @@ export function WeekGrid({
                   >
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wider ${
-                        isToday ? 'text-accent' : 'text-faint'
+                        isToday ? 'text-accent-ink' : 'text-faint'
                       }`}
                     >
                       {date.toLocaleDateString('en-GB', { weekday: 'narrow' })}
@@ -134,14 +134,14 @@ export function WeekGrid({
                         aria-label={`${habit.name} on ${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}`}
                         className={`grid h-11 w-full place-items-center rounded-2xl transition-all duration-300 ease-spring active:scale-90 ${
                           completed
-                            ? 'bg-accent text-canvas shadow-glow'
+                            ? 'accent-fill text-on-accent shadow-glow'
                             : enabled
-                              ? `bg-canvas text-muted hover:bg-accent-wash ${
+                              ? `glass-well text-muted hover:text-ink ${
                                   isToday
-                                    ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface'
+                                    ? 'ring-2 ring-accent-hi ring-offset-2 ring-offset-transparent'
                                     : ''
                                 }`
-                              : 'bg-canvas/60 text-faint opacity-50'
+                              : 'glass-well text-faint opacity-45'
                         }`}
                       >
                         {completed ? (
@@ -162,9 +162,9 @@ export function WeekGrid({
               })}
             </div>
 
-            <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-line-strong/50">
+            <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-line-strong/40">
               <div
-                className="h-full rounded-full bg-accent transition-[width] duration-700 ease-spring"
+                className="accent-fill h-full rounded-full transition-[width] duration-700 ease-spring"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
