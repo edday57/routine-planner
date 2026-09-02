@@ -3,6 +3,7 @@ import type { Completion, Habit } from '../types'
 export const HABITS_KEY = 'routine-habits'
 export const COMPLETIONS_KEY = 'routine-completions'
 export const SEEDED_KEY = 'routine-seeded'
+export const LAST_USER_KEY = 'routine-last-user'
 
 export function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -18,35 +19,68 @@ export function saveToStorage<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
+const LEGACY_SEED_IDS: Record<string, string> = {
+  'seed-wake': 'a1e1c7e0-1c11-4b11-8a11-000000000001',
+  'seed-gym': 'a1e1c7e0-1c11-4b11-8a11-000000000002',
+  'seed-meditate': 'a1e1c7e0-1c11-4b11-8a11-000000000003',
+  'seed-read': 'a1e1c7e0-1c11-4b11-8a11-000000000004',
+}
+
 export const SEED_HABITS: Habit[] = [
   {
-    id: 'seed-wake',
+    id: LEGACY_SEED_IDS['seed-wake'],
     name: 'Wake up',
     type: 'daily',
     timeLabel: '8:00 AM',
     emoji: '☀️',
   },
   {
-    id: 'seed-gym',
+    id: LEGACY_SEED_IDS['seed-gym'],
     name: 'Gym',
     type: 'weekly_target',
     weeklyTarget: 5,
     emoji: '🏋️',
   },
   {
-    id: 'seed-meditate',
+    id: LEGACY_SEED_IDS['seed-meditate'],
     name: 'Meditate',
     type: 'scheduled',
     scheduledDays: [1, 3, 5],
     emoji: '🧘',
   },
   {
-    id: 'seed-read',
+    id: LEGACY_SEED_IDS['seed-read'],
     name: 'Read 20 min',
     type: 'daily',
     emoji: '📖',
   },
 ]
+
+function remapLegacyId(id: string): string {
+  return LEGACY_SEED_IDS[id] ?? id
+}
+
+function migrateLegacyIds(
+  habits: Habit[],
+  completions: Completion[],
+): { habits: Habit[]; completions: Completion[] } {
+  const nextHabits = habits.map((h) => ({ ...h, id: remapLegacyId(h.id) }))
+  const nextCompletions = completions.map((c) => ({
+    ...c,
+    habitId: remapLegacyId(c.habitId),
+  }))
+
+  const changed =
+    nextHabits.some((h, i) => h.id !== habits[i].id) ||
+    nextCompletions.some((c, i) => c.habitId !== completions[i].habitId)
+
+  if (changed) {
+    saveToStorage(HABITS_KEY, nextHabits)
+    saveToStorage(COMPLETIONS_KEY, nextCompletions)
+  }
+
+  return { habits: nextHabits, completions: nextCompletions }
+}
 
 export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
   const alreadySeeded = localStorage.getItem(SEEDED_KEY)
@@ -54,7 +88,7 @@ export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
   const completions = loadFromStorage<Completion[]>(COMPLETIONS_KEY, [])
 
   if (alreadySeeded || habits.length > 0) {
-    return { habits, completions }
+    return migrateLegacyIds(habits, completions)
   }
 
   saveToStorage(HABITS_KEY, SEED_HABITS)

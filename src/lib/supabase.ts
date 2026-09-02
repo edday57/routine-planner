@@ -1,0 +1,25 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
+
+const url = import.meta.env.VITE_SUPABASE_URL
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+
+export const isSupabaseConfigured = Boolean(url && publishableKey)
+
+export const supabase: SupabaseClient<Database> | null = isSupabaseConfigured
+  ? createClient<Database>(url, publishableKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        // Implicit flow lets a static PWA finish a magic-link login from the
+        // hash fragment, without a server-side /auth/confirm route.
+        flowType: 'implicit',
+      },
+    })
+  : null
+
+export function authRedirectTo(): string {
+  const base = import.meta.env.BASE_URL || '/'
+  return new URL(base, window.location.origin).toString()
+}
