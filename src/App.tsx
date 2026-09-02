@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Page } from './types'
 import { AuthSheet } from './components/AuthSheet'
 import { BottomNav } from './components/BottomNav'
+import { SyncNudge } from './components/SyncNudge'
 import { TopBar } from './components/TopBar'
 import { HabitsPage } from './pages/HabitsPage'
 import { TodayPage } from './pages/TodayPage'
@@ -9,6 +10,7 @@ import { WeekPage } from './pages/WeekPage'
 import { useAuth } from './hooks/useAuth'
 import { useRoutine } from './hooks/useRoutine'
 import { useTheme } from './hooks/useTheme'
+import { requestPersistentStorage } from './lib/device'
 
 export default function App() {
   const [page, setPage] = useState<Page>('today')
@@ -18,6 +20,15 @@ export default function App() {
   const auth = useAuth()
   const { habits, completions, addHabit, updateHabit, deleteHabit, toggleCompletion } =
     useRoutine(auth.user?.id, auth.ready)
+
+  useEffect(() => {
+    void requestPersistentStorage()
+  }, [])
+
+  const openAuth = () => {
+    auth.resetForm()
+    setShowAuth(true)
+  }
 
   return (
     <>
@@ -29,10 +40,7 @@ export default function App() {
           user={auth.user}
           showAccount={auth.configured}
           onToggleTheme={toggleTheme}
-          onOpenAccount={() => {
-            auth.resetForm()
-            setShowAuth(true)
-          }}
+          onOpenAccount={openAuth}
         />
 
         {/* Opacity-only transition: a lingering transform would capture fixed children. */}
@@ -42,6 +50,11 @@ export default function App() {
               habits={habits}
               completions={completions}
               onToggle={toggleCompletion}
+              banner={
+                auth.configured && auth.ready && !auth.user ? (
+                  <SyncNudge onSignIn={openAuth} />
+                ) : undefined
+              }
             />
           )}
           {page === 'week' && (
@@ -72,7 +85,7 @@ export default function App() {
           busy={auth.busy}
           error={auth.error}
           emailSent={auth.emailSent}
-          onSendLink={auth.sendMagicLink}
+          onSendCode={auth.sendCode}
           onVerifyCode={auth.verifyCode}
           onSignOut={auth.signOut}
           onClose={() => setShowAuth(false)}

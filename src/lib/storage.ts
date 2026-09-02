@@ -82,7 +82,10 @@ function migrateLegacyIds(
   return { habits: nextHabits, completions: nextCompletions }
 }
 
-export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
+export function readLocalRoutine(allowSeed: boolean): {
+  habits: Habit[]
+  completions: Completion[]
+} {
   const alreadySeeded = localStorage.getItem(SEEDED_KEY)
   const habits = loadFromStorage<Habit[]>(HABITS_KEY, [])
   const completions = loadFromStorage<Completion[]>(COMPLETIONS_KEY, [])
@@ -91,8 +94,16 @@ export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
     return migrateLegacyIds(habits, completions)
   }
 
+  if (!allowSeed) {
+    return { habits: [], completions: [] }
+  }
+
   saveToStorage(HABITS_KEY, SEED_HABITS)
   saveToStorage(COMPLETIONS_KEY, [])
   localStorage.setItem(SEEDED_KEY, 'true')
   return { habits: SEED_HABITS, completions: [] }
+}
+
+export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
+  return readLocalRoutine(true)
 }

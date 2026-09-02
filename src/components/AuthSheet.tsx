@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { LogOut, Mail } from 'lucide-react'
+import { KeyRound, LogOut, Mail } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
+import { isStandaloneApp, rememberedEmail } from '../lib/device'
 import { Sheet } from './Sheet'
 
 interface AuthSheetProps {
@@ -8,7 +9,7 @@ interface AuthSheetProps {
   busy: boolean
   error: string | null
   emailSent: boolean
-  onSendLink: (email: string) => Promise<boolean>
+  onSendCode: (email: string) => Promise<boolean>
   onVerifyCode: (email: string, token: string) => Promise<boolean>
   onSignOut: () => Promise<void>
   onClose: () => void
@@ -19,18 +20,19 @@ export function AuthSheet({
   busy,
   error,
   emailSent,
-  onSendLink,
+  onSendCode,
   onVerifyCode,
   onSignOut,
   onClose,
 }: AuthSheetProps) {
-  const [email, setEmail] = useState(user?.email ?? '')
+  const [email, setEmail] = useState(user?.email ?? rememberedEmail())
   const [code, setCode] = useState('')
+  const standalone = isStandaloneApp()
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
-    await onSendLink(email)
+    await onSendCode(email)
   }
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -70,13 +72,13 @@ export function AuthSheet({
                 {user.email}
               </span>
               <span className="block text-[13px] text-accent-ink">
-                Synced across your devices
+                Safari and the home-screen app now share this routine
               </span>
             </span>
           </div>
           <p className="text-[13px] leading-relaxed text-muted">
-            Signing out keeps a copy of your habits on this device. Sign in again
-            on another phone or laptop to pick up where you left off.
+            On iPhone, Safari and Add to Home Screen keep separate local copies.
+            Staying signed in is what keeps ticks and habits in one place.
           </p>
         </div>
       </Sheet>
@@ -84,11 +86,12 @@ export function AuthSheet({
   }
 
   return (
-    <Sheet title="Sync your routine" onClose={onClose}>
+    <Sheet title="Keep this in sync" onClose={onClose}>
       <form onSubmit={emailSent ? handleVerify : handleSend} className="space-y-5 pb-2">
         <p className="text-[14px] leading-relaxed text-muted">
-          Get a sign-in link by email. Your habits then follow you from phone to
-          laptop — no password to remember.
+          {standalone
+            ? 'The home-screen app cannot open email links. We’ll send a 6-digit code — type it here and stay in the app.'
+            : 'We’ll email a 6-digit code. Type it here. Skip the link if you also use the home-screen app — that link only signs in Safari.'}
         </p>
 
         <label className="block">
@@ -110,21 +113,25 @@ export function AuthSheet({
         {emailSent && (
           <label className="block">
             <span className="mb-2.5 block text-[11px] font-bold uppercase tracking-[0.16em] text-faint">
-              Code from email
+              6-digit code
             </span>
             <input
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
               placeholder="123456"
-              className="glass-well w-full rounded-2xl px-4 py-3.5 text-[16px] tracking-[0.2em] text-ink outline-none transition placeholder:text-faint focus:border-accent-hi"
+              className="glass-well w-full rounded-2xl px-4 py-3.5 text-center text-[22px] font-semibold tracking-[0.28em] text-ink outline-none transition placeholder:text-faint focus:border-accent-hi"
             />
-            <span className="mt-2 block text-[13px] text-muted">
-              Prefer the link? Open it on this device and you’ll be signed in
-              automatically.
-            </span>
+            <button
+              type="button"
+              onClick={() => onSendCode(email)}
+              disabled={busy}
+              className="mt-2 text-[13px] font-semibold text-accent-ink disabled:opacity-50"
+            >
+              Send a new code
+            </button>
           </label>
         )}
 
@@ -132,15 +139,17 @@ export function AuthSheet({
 
         <button
           type="submit"
-          disabled={busy || !email.trim()}
+          disabled={busy || !email.trim() || (emailSent && code.length < 6)}
           className="accent-fill flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-semibold text-on-accent shadow-glow transition active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
         >
-          <Mail className="size-4" />
+          {emailSent ? <KeyRound className="size-4" /> : <Mail className="size-4" />}
           {busy
-            ? 'Sending…'
+            ? emailSent
+              ? 'Checking…'
+              : 'Sending…'
             : emailSent
-              ? 'Verify code'
-              : 'Email me a sign-in link'}
+              ? 'Sign in with code'
+              : 'Email me a code'}
         </button>
       </form>
     </Sheet>

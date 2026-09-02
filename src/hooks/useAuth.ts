@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { authRedirectTo, isSupabaseConfigured, supabase } from '../lib/supabase'
+import { isStandaloneApp, rememberEmail } from '../lib/device'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -33,7 +34,7 @@ export function useAuth() {
     }
   }, [])
 
-  const sendMagicLink = useCallback(async (email: string) => {
+  const sendCode = useCallback(async (email: string) => {
     if (!supabase) {
       setError('Supabase is not configured.')
       return false
@@ -42,11 +43,18 @@ export function useAuth() {
     setBusy(true)
     setError(null)
 
+    const trimmed = email.trim()
+    rememberEmail(trimmed)
+
+    // Home-screen apps on iOS cannot finish a magic-link login: Mail opens
+    // Safari, which has a separate cookie jar. Ask for an OTP email instead
+    // and keep the session inside this webview.
     const { error: signInError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
+      email: trimmed,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: authRedirectTo(),
+        // Only attach a redirect when we are in a normal browser tab.
+        ...(isStandaloneApp() ? {} : { emailRedirectTo: undefined }),
       },
     })
 
@@ -70,16 +78,30 @@ export function useAuth() {
     setBusy(true)
     setError(null)
 
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: token.trim(),
+    const trimmedEmail = email.trim()
+    const trimmedToken = token.replace(/\s+/g, '')
+
+    const emailAttempt = await supabase.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedToken,
       type: 'email',
+    })
+
+    if (!emailAttempt.error) {
+      setBusy(false)
+      return true
+    }
+
+    const signupAttempt = await supabase.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedToken,
+      type: 'signup',
     })
 
     setBusy(false)
 
-    if (verifyError) {
-      setError(verifyError.message)
+    if (signupAttempt.error) {
+      setError(signupAttempt.error.message)
       return false
     }
 
@@ -106,7 +128,7 @@ export function useAuth() {
     error,
     emailSent,
     configured: isSupabaseConfigured,
-    sendMagicLink,
+    sendCode,
     verifyCode,
     signOut,
     resetForm,

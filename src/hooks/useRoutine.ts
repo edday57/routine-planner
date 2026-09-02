@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Completion, Habit } from '../types'
+import { mergeRoutines } from '../lib/merge'
 import {
   COMPLETIONS_KEY,
   HABITS_KEY,
   LAST_USER_KEY,
+  readLocalRoutine,
   saveToStorage,
-  seedIfEmpty,
 } from '../lib/storage'
 import { habitToInsert } from '../lib/mappers'
 import { fetchRemoteRoutine, uploadLocalRoutine } from '../lib/sync'
@@ -30,7 +31,7 @@ export function useRoutine(userId: string | undefined, authReady: boolean) {
       setReady(false)
       setSyncError(null)
 
-      const local = seedIfEmpty()
+      const local = readLocalRoutine(!userId)
 
       if (!userId || !supabase) {
         if (cancelled) return
@@ -46,18 +47,18 @@ export function useRoutine(userId: string | undefined, authReady: boolean) {
 
         const lastUser = localStorage.getItem(LAST_USER_KEY)
         const localBelongsHere = !lastUser || lastUser === userId
+        const localToMerge = localBelongsHere
+          ? local
+          : { habits: [], completions: [] }
 
-        if (remote.habits.length === 0 && local.habits.length > 0 && localBelongsHere) {
-          await uploadLocalRoutine(userId, local.habits, local.completions)
-          setHabits(local.habits)
-          setCompletions(local.completions)
-        } else {
-          setHabits(remote.habits)
-          setCompletions(remote.completions)
-          saveToStorage(HABITS_KEY, remote.habits)
-          saveToStorage(COMPLETIONS_KEY, remote.completions)
-        }
+        const merged = mergeRoutines(localToMerge, remote)
+        await uploadLocalRoutine(userId, merged.habits, merged.completions)
 
+        if (cancelled) return
+        setHabits(merged.habits)
+        setCompletions(merged.completions)
+        saveToStorage(HABITS_KEY, merged.habits)
+        saveToStorage(COMPLETIONS_KEY, merged.completions)
         localStorage.setItem(LAST_USER_KEY, userId)
       } catch (error) {
         if (cancelled) return
@@ -78,13 +79,10 @@ export function useRoutine(userId: string | undefined, authReady: boolean) {
     }
   }, [authReady, userId])
 
-  const persistHabits = useCallback(
-    (next: Habit[]) => {
-      setHabits(next)
-      saveToStorage(HABITS_KEY, next)
-    },
-    [],
-  )
+  const persistHabits = useCallback((next: Habit[]) => {
+    setHabits(next)
+    saveToStorage(HABITS_KEY, next)
+  }, [])
 
   const persistCompletions = useCallback((next: Completion[]) => {
     setCompletions(next)
@@ -117,7 +115,11 @@ export function useRoutine(userId: string | undefined, authReady: boolean) {
       const updated = next.find((h) => h.id === id)
       if (!updated) return
 
-      const row = habitToInsert(updated, userId, next.findIndex((h) => h.id === id))
+      const row = habitToInsert(
+        updated,
+        userId,
+        next.findIndex((h) => h.id === id),
+      )
       const { error } = await supabase.from('habits').update(row).eq('id', id)
       if (error) setSyncError(error.message)
     },

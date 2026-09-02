@@ -18,8 +18,3 @@ export const supabase: SupabaseClient<Database> | null = isSupabaseConfigured
       },
     })
   : null
-
-export function authRedirectTo(): string {
-  const base = import.meta.env.BASE_URL || '/'
-  return new URL(base, window.location.origin).toString()
-}

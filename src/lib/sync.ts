@@ -31,11 +31,15 @@ export async function uploadLocalRoutine(
   habits: Habit[],
   completions: Completion[],
 ): Promise<void> {
-  if (!supabase || habits.length === 0) return
+  if (!supabase) return
 
-  const habitRows = habits.map((habit, index) => habitToInsert(habit, userId, index))
-  const { error: habitError } = await supabase.from('habits').upsert(habitRows)
-  if (habitError) throw habitError
+  if (habits.length > 0) {
+    const habitRows = habits.map((habit, index) =>
+      habitToInsert(habit, userId, index),
+    )
+    const { error: habitError } = await supabase.from('habits').upsert(habitRows)
+    if (habitError) throw habitError
+  }
 
   if (completions.length === 0) return
 
