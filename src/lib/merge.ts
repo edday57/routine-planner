@@ -1,4 +1,4 @@
-import type { Completion, Habit } from '../types'
+import type { Completion, Goal, GoalStep, Habit } from '../types'
 
 function habitFingerprint(habit: Habit): string {
   return [
@@ -62,5 +62,59 @@ export function mergeRoutines(
   return {
     habits: [...habits.values()],
     completions: [...completions.values()],
+  }
+}
+
+function goalFingerprint(goal: Goal): string {
+  return [goal.title.trim().toLowerCase(), goal.horizon].join('|')
+}
+
+export function mergeGoals(
+  local: { goals: Goal[]; steps: GoalStep[] },
+  remote: { goals: Goal[]; steps: GoalStep[] },
+): { goals: Goal[]; steps: GoalStep[] } {
+  const goals = new Map<string, Goal>()
+  const remap = new Map<string, string>()
+
+  for (const goal of remote.goals) {
+    goals.set(goal.id, goal)
+  }
+
+  const remoteByFingerprint = new Map(
+    remote.goals.map((goal) => [goalFingerprint(goal), goal]),
+  )
+
+  for (const goal of local.goals) {
+    if (goals.has(goal.id)) {
+      const remoteGoal = goals.get(goal.id)
+      if (remoteGoal && goal.status === 'reached') {
+        goals.set(goal.id, { ...remoteGoal, status: 'reached' })
+      }
+      continue
+    }
+
+    const match = remoteByFingerprint.get(goalFingerprint(goal))
+    if (match) {
+      remap.set(goal.id, match.id)
+      continue
+    }
+
+    goals.set(goal.id, goal)
+  }
+
+  const steps = new Map<string, GoalStep>()
+
+  const addStep = (step: GoalStep) => {
+    const goalId = remap.get(step.goalId) ?? step.goalId
+    if (!goals.has(goalId)) return
+    steps.set(step.id, { ...step, goalId })
+  }
+
+  remote.steps.forEach(addStep)
+  local.steps.forEach(addStep)
+
+  return {
+    goals: [...goals.values()],
+    steps: [...steps.values()],
   }
 }

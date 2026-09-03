@@ -1,9 +1,11 @@
-import type { Completion, Habit } from '../types'
+import type { Completion, Goal, GoalStep, Habit } from '../types'
 
 export const HABITS_KEY = 'routine-habits'
 export const COMPLETIONS_KEY = 'routine-completions'
 export const SEEDED_KEY = 'routine-seeded'
 export const LAST_USER_KEY = 'routine-last-user'
+export const GOALS_KEY = 'routine-goals'
+export const GOAL_STEPS_KEY = 'routine-goal-steps'
 
 export function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -106,4 +108,11 @@ export function readLocalRoutine(allowSeed: boolean): {
 
 export function seedIfEmpty(): { habits: Habit[]; completions: Completion[] } {
   return readLocalRoutine(true)
+}
+
+export function readLocalGoals(): { goals: Goal[]; steps: GoalStep[] } {
+  return {
+    goals: loadFromStorage<Goal[]>(GOALS_KEY, []),
+    steps: loadFromStorage<GoalStep[]>(GOAL_STEPS_KEY, []),
+  }
 }

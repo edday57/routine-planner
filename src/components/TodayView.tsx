@@ -1,4 +1,5 @@
 import { Flame, PartyPopper } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { Completion, Habit } from '../types'
 import { HabitRow } from './HabitRow'
 import { ProgressRing } from './ProgressRing'
@@ -19,6 +20,7 @@ interface TodayViewProps {
   habits: Habit[]
   completions: Completion[]
   onToggle: (habitId: string, date: string) => void
+  afterWeek?: ReactNode
 }
 
 function SectionHeading({ label, count }: { label: string; count: number }) {
@@ -101,7 +103,12 @@ function WeekStrip({
   )
 }
 
-export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
+export function TodayView({
+  habits,
+  completions,
+  onToggle,
+  afterWeek,
+}: TodayViewProps) {
   const today = new Date()
   const todayStr = formatDate(today)
   const weekDates = getWeekDates(today)
@@ -180,6 +187,8 @@ export function TodayView({ habits, completions, onToggle }: TodayViewProps) {
       {habits.length > 0 && (
         <WeekStrip habits={habits} completions={completions} today={today} />
       )}
+
+      {afterWeek}
 
       {dueToday.length === 0 ? (
         <EmptyState

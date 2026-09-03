@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Completion, Habit } from '../types'
+import type { Completion, Goal, GoalStep, Habit } from '../types'
 import { WeekGrid } from '../components/WeekGrid'
+import { WeekGoalTrail } from '../components/WeekGoalTrail'
 import { PageHeader } from '../components/PageHeader'
 import { formatDate, getWeekDates } from '../lib/weekUtils'
 
@@ -10,6 +11,8 @@ interface WeekPageProps {
   weekAnchor: Date
   onWeekChange: (date: Date) => void
   onToggle: (habitId: string, date: string) => void
+  goals: Goal[]
+  steps: GoalStep[]
 }
 
 export function WeekPage({
@@ -18,6 +21,8 @@ export function WeekPage({
   weekAnchor,
   onWeekChange,
   onToggle,
+  goals,
+  steps,
 }: WeekPageProps) {
   const weekDates = getWeekDates(weekAnchor)
   const [start, end] = [weekDates[0], weekDates[6]]
@@ -84,6 +89,8 @@ export function WeekPage({
         weekAnchor={weekAnchor}
         onToggle={onToggle}
       />
+
+      <WeekGoalTrail goals={goals} steps={steps} weekAnchor={weekAnchor} />
     </div>
   )
 }
